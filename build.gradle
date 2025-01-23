@@ -29,6 +29,7 @@ repositories {
 dependencies {
     implementation 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    implementation 'org.slf4j:slf4j-nop:2.0.7'
 
     implementation 'com.codeborne:selenide:7.5.1'
     implementation 'org.apache.poi:poi:3.11'

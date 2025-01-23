@@ -7,7 +7,6 @@ import com.codeborne.selenide.SelenideDriver;
 import com.gw.report.ReportModel;
 import com.gw.report.ReportRow;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.CommandLine;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
@@ -17,7 +16,6 @@ import java.util.concurrent.CountDownLatch;
 import static com.gw.ArgumentParser.*;
 import static org.openqa.selenium.firefox.GeckoDriverService.GECKO_DRIVER_LOG_PROPERTY;
 
-@Slf4j
 @AllArgsConstructor
 public class TestThread extends Thread {
 
@@ -25,6 +23,7 @@ public class TestThread extends Thread {
     private ReportModel reportData;
     private final CountDownLatch doneSignal;
     private final CountDownLatch startFilteringSignal;
+    private final int threadIndex;
 
     @Override
     public void run(){
@@ -41,9 +40,10 @@ public class TestThread extends Thread {
         SelenideDriver browser = new SelenideDriver(config);
         browser.open("http://www.google.com");
         long before = System.currentTimeMillis();
-        browser.open("");
+        browser.open("https://partner2-qa.colonnade.pl/myColonnade/dashboard");
         long pageLoadDuration = System.currentTimeMillis() - before;
         //login
+        System.out.println(" ---- Thread " +threadIndex+ " - SSP login page reached.");
         browser.$("#email").should(Condition.visible, Duration.ofSeconds(60)).setValue(commandLine.getOptionValue(ARG_LOGIN));
         browser.$("#password").setValue(commandLine.getOptionValue(ARG_PASSWORD));
         before = System.currentTimeMillis();
@@ -53,7 +53,7 @@ public class TestThread extends Thread {
 
 
         new CookieHandler().acceptCookies(browser);
-        log.info("Succ logged into instance and accepted cookies");
+        System.out.println(" ---- Thread " +threadIndex+ " - Succ logged into instance and accepted cookies");
         //switch to tab
         //input producer ID and search results
         //
@@ -64,7 +64,7 @@ public class TestThread extends Thread {
             browser.close();
             throw new RuntimeException(e);
         }
-
+        System.out.println(" ---- Thread " +threadIndex+ " - Reached end of script and quiting browser instance.");
         browser.close();
 
         reportData.addRow(new ReportRow(pageLoadDuration, 1l, 1l));
