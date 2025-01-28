@@ -1,14 +1,15 @@
 package com.gw;
 
 import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.SelenideConfig;
 import com.codeborne.selenide.SelenideDriver;
 import com.gw.report.ReportModel;
 import com.gw.report.ReportRow;
 import lombok.AllArgsConstructor;
 import org.apache.commons.cli.CommandLine;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
@@ -22,53 +23,88 @@ public class TestThread extends Thread {
     private CommandLine commandLine;
     private ReportModel reportData;
     private final CountDownLatch doneSignal;
+    private final CountDownLatch nextBrowserLatch;
     private final CountDownLatch startFilteringSignal;
     private final int threadIndex;
 
     @Override
-    public void run(){
-
-        System.setProperty(GECKO_DRIVER_LOG_PROPERTY, "/dev/null");
-        FirefoxOptions options = new FirefoxOptions();
-        SelenideConfig config = new SelenideConfig();
-        config.browser("firefox");
-        config.browserCapabilities(options);
-        config.browserSize("1920x1080");
-        config.headless(commandLine.hasOption(ARG_HEADLESS));
-
-
-        SelenideDriver browser = new SelenideDriver(config);
-        browser.open("http://www.google.com");
-        long before = System.currentTimeMillis();
-        browser.open("https://partner2-qa.colonnade.pl/myColonnade/dashboard");
-        long pageLoadDuration = System.currentTimeMillis() - before;
-        //login
-        System.out.println(" ---- Thread " +threadIndex+ " - SSP login page reached.");
-        browser.$("#email").should(Condition.visible, Duration.ofSeconds(60)).setValue(commandLine.getOptionValue(ARG_LOGIN));
-        browser.$("#password").setValue(commandLine.getOptionValue(ARG_PASSWORD));
-        before = System.currentTimeMillis();
-        browser.$("#next").click();
-        long afterLoginLoadDuration = System.currentTimeMillis() - before;
-
-
-
-        new CookieHandler().acceptCookies(browser);
-        System.out.println(" ---- Thread " +threadIndex+ " - Succ logged into instance and accepted cookies");
-        //switch to tab
-        //input producer ID and search results
-        //
-        startFilteringSignal.countDown();
+    public void run() {
         try {
-            startFilteringSignal.await();
-        } catch (InterruptedException e) {
+            System.setProperty(GECKO_DRIVER_LOG_PROPERTY, "/dev/null");
+            FirefoxOptions options = new FirefoxOptions();
+            SelenideConfig config = new SelenideConfig();
+            config.browser("firefox");
+            config.browserCapabilities(options);
+            config.browserSize("1920x1080");
+            config.headless(commandLine.hasOption(ARG_HEADLESS));
+
+
+            SelenideDriver browser = new SelenideDriver(config);
+            long before = System.currentTimeMillis();
+            browser.open("https://partner2-qa.colonnade.sk/myColonnade/dashboard");
+//            browser.open("https://portal2-qa.colonnade.cz/myColonnade/dashboard");
+            long loginPageLoadDuration = System.currentTimeMillis() - before;
+            System.out.println(" ---- Thread " + threadIndex + " - SSP login page reached.");
+
+            browser.$("#email").should(Condition.visible, Duration.ofSeconds(60)).setValue(commandLine.getOptionValue(ARG_LOGIN));
+            browser.$("#password").should(Condition.visible, Duration.ofSeconds(60)).setValue(commandLine.getOptionValue(ARG_PASSWORD));
+            browser.$("#next").should(Condition.visible, Duration.ofSeconds(60));
+            before = System.currentTimeMillis();
+            browser.$("#next").click();
+            waitUntilPageLoaded(browser);
+            long loginDuration = System.currentTimeMillis() - before;
+
+            new CookieHandler().acceptCookies(browser);
+            System.out.println(" ---- Thread " + threadIndex + " - Succ logged into SSP instance and accepted cookies");
+            nextBrowserLatch.countDown();
+
+            //move to reports tab
+            browser.$("#dashboard_reporting_id").click();
+
+            //set parameters for filtering
+            String user = "su";
+            String[] producerToBeSelected = {"Slovakia Bubo", "1000000"};
+
+            browser.$("#userConfigFilterEmailId").should(Condition.visible, Duration.ofSeconds(20)).$x(".//div[contains(text(),'" + user + "')]").parent().click();
+
+
+//            for (String producer : producerToBeSelected) {
+//            browser.$("#userConfigFilterProducerCodeId").should(Condition.visible, Duration.ofSeconds(20)).$x(".//div[contains(text(),'" + producer + "')]").parent().click();
+//            }
+
+            startFilteringSignal.countDown();
+            long listLoadTime;
+            try {
+                startFilteringSignal.await();
+                //press Apply Filters button
+                browser.$("#applyFilterBtnId").click();
+                System.out.println(" ---- Thread " + threadIndex + " - triggering filtering.");
+                before = System.currentTimeMillis();
+//            browser.$("#applyFilterBtnId").click();
+
+                //wait for page load finished
+                listLoadTime = System.currentTimeMillis() - before;
+
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println(" ---- Thread " + threadIndex + " - reached end of script. Closing browser instance.");
             browser.close();
-            throw new RuntimeException(e);
+
+            reportData.addRow(new ReportRow(loginPageLoadDuration, loginDuration, listLoadTime, 1l));
+
+            doneSignal.countDown();
+        } catch (Exception e) {
+            System.out.println(" ---- Thread " + threadIndex + " had exception");
+            throw e;
+        } finally {
+            startFilteringSignal.countDown();
+            doneSignal.countDown();
         }
-        System.out.println(" ---- Thread " +threadIndex+ " - Reached end of script and quiting browser instance.");
-        browser.close();
+    }
 
-        reportData.addRow(new ReportRow(pageLoadDuration, 1l, 1l));
-
-        doneSignal.countDown();
+    private void waitUntilPageLoaded(SelenideDriver driver) {
+        new WebDriverWait(driver.getWebDriver(), Duration.ofSeconds(120)).until(
+                webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
     }
 }

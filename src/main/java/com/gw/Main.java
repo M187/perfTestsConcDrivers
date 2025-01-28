@@ -4,6 +4,7 @@ import com.gw.report.ReportModel;
 import org.apache.commons.cli.CommandLine;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static com.gw.ArgumentParser.*;
 
@@ -20,20 +21,20 @@ public class Main {
         ReportModel reportModel = new ReportModel();
 
         CountDownLatch latch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
-        CountDownLatch syncLatchForFilteringStart = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
+        CountDownLatch filteringLatch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
 
         System.out.println(" --- Starting to spawn browser threads.");
         for (int i = 0; i < Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)); i++) {
-            new TestThread(commandLine, reportModel, latch, syncLatchForFilteringStart, i)
+            CountDownLatch nextBrowserLatch = new CountDownLatch(1);
+            new TestThread(commandLine, reportModel, latch, nextBrowserLatch, filteringLatch, i)
                     .start();
             System.out.println(" --- Thread " + i + " started.");
+            nextBrowserLatch.await(300, TimeUnit.SECONDS);
         }
 
         latch.await();
 
         System.out.println(" --- Writing results into excel.");
-//        new ExcelWriter().prepareReport();
-//        new ExcelWriter().prepareReport(new ReportModel().getMockObject());
         String fileName = new ExcelWriter().prepareReport(reportModel, commandLine.getOptionValue(ARG_THREADS));
         System.out.println(" --- Finished writing results into excel file: " + fileName);
     }

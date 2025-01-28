@@ -9,7 +9,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ReportRow {
 
-    long loginPageLoadTime;
+    long landingPageLoadTime;
+    long loginLoadTime;
     long listLoadTime;
     long numberOfResultsReturned;
 }

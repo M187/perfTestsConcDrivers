@@ -8,7 +8,7 @@ import java.time.Duration;
 public class CookieHandler {
 
     public void acceptCookies(SelenideDriver driver) {
-        driver.$("#ch2-dialog").should(Condition.exist, Duration.ofSeconds(60))
-                .$x(".//button[1]").click();
+        driver.$("#ch2-dialog").should(Condition.visible, Duration.ofSeconds(60))
+                .$x(".//button[1]").should(Condition.visible, Duration.ofSeconds(60)).click();
     }
 }
