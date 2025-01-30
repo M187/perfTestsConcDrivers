@@ -59,25 +59,22 @@ public class TestThread extends Thread {
             browser.$("#dashboard_reporting_id").click();
 
             //set parameters for filtering
-            String user = "su";
-            String[] producerToBeSelected = {"Slovakia Bubo", "1000000"};
-
-            browser.$("#userConfigFilterEmailId").should(Condition.visible, Duration.ofSeconds(20)).$x(".//div[contains(text(),'" + user + "')]").parent().click();
-
-
-//            for (String producer : producerToBeSelected) {
-//            browser.$("#userConfigFilterProducerCodeId").should(Condition.visible, Duration.ofSeconds(20)).$x(".//div[contains(text(),'" + producer + "')]").parent().click();
-//            }
+            if (commandLine.getOptionValue(ARG_USER) != null) {
+                browser.$("#userConfigFilterEmailId").should(Condition.visible, Duration.ofSeconds(20)).$x(".//div[contains(text(),'" + commandLine.getOptionValue(ARG_USER) + "')]").parent().click();
+            } else if (commandLine.getOptionValue(ARG_SUPERVISORS) != null) {
+                for (String producer : commandLine.getOptionValue(ARG_SUPERVISORS).split(",")) {
+                    browser.$("#userConfigFilterProducerCodeId").should(Condition.visible, Duration.ofSeconds(20)).$x(".//div[contains(text(),'" + producer + "')]").parent().click();
+                }
+            }
 
             startFilteringSignal.countDown();
             long listLoadTime;
             try {
                 startFilteringSignal.await();
                 //press Apply Filters button
-                browser.$("#applyFilterBtnId").click();
                 System.out.println(" ---- Thread " + threadIndex + " - triggering filtering.");
                 before = System.currentTimeMillis();
-//            browser.$("#applyFilterBtnId").click();
+                browser.$("#applyFilterBtnId").click();
 
                 //wait for page load finished
                 listLoadTime = System.currentTimeMillis() - before;
@@ -85,12 +82,11 @@ public class TestThread extends Thread {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            System.out.println(" ---- Thread " + threadIndex + " - reached end of script. Closing browser instance.");
+            System.out.println(" ---- Thread " + threadIndex + " closing browser instance.");
             browser.close();
 
-            reportData.addRow(new ReportRow(loginPageLoadDuration, listLoadTime, 1l));
-
-            doneSignal.countDown();
+            reportData.addRow(new ReportRow("Thread" + threadIndex, loginPageLoadDuration, listLoadTime, 1l));
+            System.out.println(" ---- Thread " + threadIndex + " - reached end of lifecycle. Added data to report.");
         } catch (Exception e) {
             System.out.println(" ---- Thread " + threadIndex + " had exception");
             throw e;

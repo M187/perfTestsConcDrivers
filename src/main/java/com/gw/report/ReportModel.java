@@ -11,16 +11,24 @@ import java.util.List;
 @Getter
 public class ReportModel {
 
-    public List<ReportRow> rows = Collections.synchronizedList(new ArrayList<>());
+    public String header;
+    public boolean isUser;
+
+    public List<ReportRow> rows = Collections.synchronizedList(new ArrayList<ReportRow>());
 
     public synchronized void addRow(ReportRow row) {
         rows.add(row);
     }
 
-    public ReportModel getMockObject(){
-        ReportModel model = new ReportModel();
-        model.getRows().add(new ReportRow(1l,2l,3l));
-        model.getRows().add(new ReportRow(1l,2l,3l));
-        return model;
+    public ReportModel(String header, boolean isUser) {
+        this.header = header;
+        this.isUser = isUser;
     }
+
+//    public ReportModel getMockObject(){
+//        ReportModel model = new ReportModel();
+//        model.getRows().add(new ReportRow("",1l,2l,3l));
+//        model.getRows().add(new ReportRow("",1l,2l,3l));
+//        return model;
+//    }
 }

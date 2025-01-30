@@ -29,25 +29,47 @@ public class Main {
         System.out.println(" --------------------------------");
         System.out.println("");
 
-        CommandLine commandLine = new ArgumentParser().parse(args);
-        ReportModel reportModel = new ReportModel();
+        if (args[0].matches("-help|help|h|-h")) {
+            writeHelpMessage();
+        } else {
 
-        CountDownLatch latch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
-        CountDownLatch filteringLatch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
+            CommandLine commandLine = new ArgumentParser().parse(args);
+            ReportModel reportModel =
+                    commandLine.getOptionValue(ARG_USER) == null ? new ReportModel(commandLine.getOptionValue(ARG_SUPERVISORS), false)
+                            : new ReportModel(commandLine.getOptionValue(ARG_USER), true);
 
-        System.out.println(" --- Starting to spawn browser threads.");
-        for (int i = 0; i < Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)); i++) {
-            CountDownLatch nextBrowserLatch = new CountDownLatch(1);
-            new TestThread(commandLine, reportModel, latch, nextBrowserLatch, filteringLatch, i)
-                    .start();
-            System.out.println(" --- Thread " + i + " started.");
-            nextBrowserLatch.await(300, TimeUnit.SECONDS);
+            CountDownLatch latch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
+            CountDownLatch filteringLatch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
+
+            System.out.println(" --- Starting to spawn browser threads.");
+            for (int i = 0; i < Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)); i++) {
+                CountDownLatch nextBrowserLatch = new CountDownLatch(1);
+                new TestThread(commandLine, reportModel, latch, nextBrowserLatch, filteringLatch, i)
+                        .start();
+                System.out.println(" --- Thread " + i + " started.");
+                nextBrowserLatch.await(300, TimeUnit.SECONDS);
+            }
+
+            latch.await();
+
+            System.out.println(" --- Writing results into excel.");
+            String fileName = new ExcelWriter().prepareReport(reportModel, commandLine.getOptionValue(ARG_THREADS));
+            System.out.println(" --- Finished writing results into excel file: " + fileName);
         }
+    }
 
-        latch.await();
-
-        System.out.println(" --- Writing results into excel.");
-        String fileName = new ExcelWriter().prepareReport(reportModel, commandLine.getOptionValue(ARG_THREADS));
-        System.out.println(" --- Finished writing results into excel file: " + fileName);
+    private static void writeHelpMessage() {
+        System.out.println(" --- List of arguments: ");
+        System.out.println(" ---  -l *login*");
+        System.out.println(" ---  -p *password*");
+        System.out.println(" ---  -h enable headless mode (browser will be invisible/running in background)");
+        System.out.println(" ---  -t *numberOfThreads*");
+        System.out.println(" ---  -u *userToBeUsedToParseData* // please use either -u or -s. If both -u and -s is present, -u takes priority over -s (-s will be ignored)");
+        System.out.println(" ---  -s *commaSeparatedListOfSupervisorsToBeUsedToParseData* // please use either -u or -s. If both -u and -s is present, -u takes priority over -s (-s will be ignored)");
+        System.out.println("");
+        System.out.println(" ---  !!! for whitespace, wrap the whole value in quotas like: \"whitespace example\"");
+        System.out.println("");
+        System.out.println(" ---        Example cmd line params for user:    -l pe_ctp_test7@colonnade.pl -p Lutu5059 -t 13 -h -u su");
+        System.out.println(" ---  Example cmd line params for supervisor:    -l pe_ctp_test7@colonnade.pl -p Lutu5059 -t 13 -h -s \"Slovakia Bubo\",1000000,PRTNR-1000006");
     }
 }

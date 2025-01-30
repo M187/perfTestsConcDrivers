@@ -8,6 +8,8 @@ public class ArgumentParser {
     public static final String ARG_PASSWORD = "password";
     public static final String ARG_HEADLESS = "headless";
     public static final String ARG_THREADS = "threads";
+    public static final String ARG_USER = "user";
+    public static final String ARG_SUPERVISORS = "supervisors";
 
 
     // example string: -l login -p password -h headless -t threads
@@ -18,6 +20,8 @@ public class ArgumentParser {
         options.addOption("p", ARG_PASSWORD, true, "SSP portal password");
         options.addOption("h", ARG_HEADLESS, false, "Headless mode ON");
         options.addOption("t", ARG_THREADS, true, "Number of threads");
+        options.addOption("u", ARG_USER, true, "User to be used");
+        options.addOption("s", ARG_SUPERVISORS, true, "Supervisors to be used, comma separated");
 
         CommandLineParser parser = new DefaultParser();
         try {
