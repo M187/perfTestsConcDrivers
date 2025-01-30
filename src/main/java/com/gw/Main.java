@@ -10,6 +10,18 @@ import static com.gw.ArgumentParser.*;
 
 public class Main {
 
+    /**
+     * Scenarios
+     * 1.) 200 rows - use producer "PRTNR-1000007"
+     * 2.) 5000 rows - use producer "POLAND DIRECT"
+     * 3.) 20000 rows - use producers "HUNGARY DIRECT", "Slovakia Bubo", "1000000"
+     *
+     *
+     *
+     * @param args
+     * @throws Exception
+     */
+
     public static void main(String[] args) throws Exception {
 
         System.out.println(" --------------------------------");

@@ -43,16 +43,13 @@ public class TestThread extends Thread {
             long before = System.currentTimeMillis();
             browser.open("https://partner2-qa.colonnade.sk/myColonnade/dashboard");
 //            browser.open("https://portal2-qa.colonnade.cz/myColonnade/dashboard");
-            long loginPageLoadDuration = System.currentTimeMillis() - before;
             System.out.println(" ---- Thread " + threadIndex + " - SSP login page reached.");
 
-            browser.$("#email").should(Condition.visible, Duration.ofSeconds(60)).setValue(commandLine.getOptionValue(ARG_LOGIN));
-            browser.$("#password").should(Condition.visible, Duration.ofSeconds(60)).setValue(commandLine.getOptionValue(ARG_PASSWORD));
-            browser.$("#next").should(Condition.visible, Duration.ofSeconds(60));
-            before = System.currentTimeMillis();
+            browser.$("#email").should(Condition.visible, Duration.ofSeconds(60));
+            long loginPageLoadDuration = System.currentTimeMillis() - before;
+            browser.$("#email").setValue(commandLine.getOptionValue(ARG_LOGIN));
+            browser.$("#password").setValue(commandLine.getOptionValue(ARG_PASSWORD));
             browser.$("#next").click();
-            waitUntilPageLoaded(browser);
-            long loginDuration = System.currentTimeMillis() - before;
 
             new CookieHandler().acceptCookies(browser);
             System.out.println(" ---- Thread " + threadIndex + " - Succ logged into SSP instance and accepted cookies");
@@ -91,7 +88,7 @@ public class TestThread extends Thread {
             System.out.println(" ---- Thread " + threadIndex + " - reached end of script. Closing browser instance.");
             browser.close();
 
-            reportData.addRow(new ReportRow(loginPageLoadDuration, loginDuration, listLoadTime, 1l));
+            reportData.addRow(new ReportRow(loginPageLoadDuration, listLoadTime, 1l));
 
             doneSignal.countDown();
         } catch (Exception e) {

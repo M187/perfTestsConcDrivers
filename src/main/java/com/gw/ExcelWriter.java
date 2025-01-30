@@ -39,12 +39,10 @@ public class ExcelWriter {
                     Row row = sheet.createRow(rowNum++);
                     row.createCell(0).setCellValue( "Landing page loading time");
                     row.createCell(1).setCellValue(rR.getLandingPageLoadTime());
-                    row.createCell(2).setCellValue( "Login time");
-                    row.createCell(3).setCellValue(rR.getLoginLoadTime());
-                    row.createCell(4).setCellValue("List load time");
-                    row.createCell(5).setCellValue(rR.getListLoadTime());
-                    row.createCell(6).setCellValue("Number of entries returned");
-                    row.createCell(7).setCellValue(rR.getNumberOfResultsReturned());
+                    row.createCell(2).setCellValue("List load time");
+                    row.createCell(3).setCellValue(rR.getListLoadTime());
+                    row.createCell(4).setCellValue("Number of entries returned");
+                    row.createCell(5).setCellValue(rR.getNumberOfResultsReturned());
                 }
                 for (int i = 0; i < 6; i++) {
                     sheet.autoSizeColumn(i);

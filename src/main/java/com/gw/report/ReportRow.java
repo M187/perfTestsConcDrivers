@@ -10,7 +10,6 @@ import lombok.Setter;
 public class ReportRow {
 
     long landingPageLoadTime;
-    long loginLoadTime;
     long listLoadTime;
     long numberOfResultsReturned;
 }
