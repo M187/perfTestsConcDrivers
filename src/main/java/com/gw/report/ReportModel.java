@@ -25,10 +25,10 @@ public class ReportModel {
         this.isUser = isUser;
     }
 
-//    public ReportModel getMockObject(){
-//        ReportModel model = new ReportModel();
-//        model.getRows().add(new ReportRow("",1l,2l,3l));
-//        model.getRows().add(new ReportRow("",1l,2l,3l));
-//        return model;
-//    }
+    public static ReportModel getMockObject(){
+        ReportModel model = new ReportModel("mock", false);
+        model.getRows().add(new ReportRow("",1l,2l,3l));
+        model.getRows().add(new ReportRow("",1l,2l,3l));
+        return model;
+    }
 }

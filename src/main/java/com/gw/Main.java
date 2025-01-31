@@ -33,6 +33,7 @@ public class Main {
             writeHelpMessage();
         } else {
 
+            long runTime = System.currentTimeMillis();
             CommandLine commandLine = new ArgumentParser().parse(args);
             ReportModel reportModel =
                     commandLine.getOptionValue(ARG_USER) == null ? new ReportModel(commandLine.getOptionValue(ARG_SUPERVISORS), false)
@@ -42,7 +43,7 @@ public class Main {
             CountDownLatch filteringLatch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
 
             System.out.println(" --- Starting to spawn browser threads.");
-            for (int i = 0; i < Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)); i++) {
+            for (int i = 1; i <= Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)); i++) {
                 CountDownLatch nextBrowserLatch = new CountDownLatch(1);
                 new TestThread(commandLine, reportModel, latch, nextBrowserLatch, filteringLatch, i)
                         .start();
@@ -53,7 +54,8 @@ public class Main {
             latch.await();
 
             System.out.println(" --- Writing results into excel.");
-            String fileName = new ExcelWriter().prepareReport(reportModel, commandLine.getOptionValue(ARG_THREADS));
+//            String fileName = new ExcelWriter().prepareReport(ReportModel.getMockObject(), commandLine.getOptionValue(ARG_THREADS), System.currentTimeMillis() - runTime);
+            String fileName = new ExcelWriter().prepareReport(reportModel, commandLine.getOptionValue(ARG_THREADS), System.currentTimeMillis() - runTime);
             System.out.println(" --- Finished writing results into excel file: " + fileName);
         }
     }
