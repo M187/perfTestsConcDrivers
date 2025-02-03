@@ -4,7 +4,6 @@ import com.gw.report.ReportModel;
 import com.gw.report.ReportRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 
@@ -45,7 +44,7 @@ public class ExcelWriter {
                     row.createCell(3).setCellValue(rR.getListLoadTime());
                     row.createCell(4).setCellValue("Number of entries returned");
                     row.createCell(5).setCellValue(rR.getNumberOfResultsReturned());
-//                    row.createCell(6).setCellValue(rR.getThreadName());
+                    row.createCell(6).setCellValue(rR.getThreadName());
                 }
 
                 for (int i = 0; i < 5; i++) {
