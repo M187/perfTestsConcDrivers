@@ -35,10 +35,8 @@ public class TestThread extends Thread {
     public void run() {
         try {
             System.setProperty(GECKO_DRIVER_LOG_PROPERTY, "/dev/null");
-            FirefoxOptions options = new FirefoxOptions();
             SelenideConfig config = new SelenideConfig();
-            config.browser("firefox");
-            config.browserCapabilities(options);
+            config.browser("edge");
             config.browserSize("1920x1080");
             config.headless(commandLine.hasOption(ARG_HEADLESS));
 
@@ -46,28 +44,31 @@ public class TestThread extends Thread {
             SelenideDriver browser = new SelenideDriver(config);
             long before = System.currentTimeMillis();
             browser.open("https://partner2-qa.colonnade.pl/myColonnade/dashboard");
-//            browser.open("https://portal2-qa.colonnade.cz/myColonnade/dashboard");
+            WebDriver driver = browser.getWebDriver();
+            driver.manage().timeouts().implicitlyWait(100, TimeUnit.SECONDS);
             System.out.println(" ---- Thread " + threadIndex + " - SSP login page reached.");
 
-            browser.$("#email").should(Condition.visible, Duration.ofSeconds(60));
+//            browser.$("#email").should(Condition.visible, Duration.ofSeconds(60));
+            driver.findElement(By.cssSelector("#email")).isDisplayed();
             long loginPageLoadDuration = System.currentTimeMillis() - before;
-            browser.$("#email").setValue(commandLine.getOptionValue(ARG_LOGIN));
-            browser.$("#password").setValue(commandLine.getOptionValue(ARG_PASSWORD));
-            browser.$("#next").click();
+            driver.findElement(By.cssSelector("#email")).sendKeys(commandLine.getOptionValue(ARG_LOGIN));
+            driver.findElement(By.cssSelector("#password")).sendKeys(commandLine.getOptionValue(ARG_PASSWORD));
+            driver.findElement(By.cssSelector("#next")).click();
 
-            new CookieHandler().acceptCookies(browser);
+            new CookieHandler().acceptCookies(driver);
             System.out.println(" ---- Thread " + threadIndex + " - Succ logged into SSP instance and accepted cookies");
-//            nextBrowserLatch.countDown();
 
             //move to reports tab
-            browser.$("#dashboard_reporting_id").click();
+            driver.findElement(By.cssSelector("#dashboard_reporting_id")).click();
 
             //set parameters for filtering
             if (commandLine.getOptionValue(ARG_USER) != null) {
-                browser.$("#userConfigFilterEmailId").should(Condition.visible, Duration.ofSeconds(100)).$x(".//div[contains(text(),'" + commandLine.getOptionValue(ARG_USER) + "')]").parent().click();
+//                browser.$("#userConfigFilterEmailId").should(Condition.visible, Duration.ofSeconds(100)).$x(".//div[contains(text(),'" + commandLine.getOptionValue(ARG_USER) + "')]").parent().click();
+                driver.findElement(By.cssSelector("#userConfigFilterEmailId")).findElement(By.xpath(".//div[contains(text(),'" + commandLine.getOptionValue(ARG_USER) + "')]/..")).click();
             } else if (commandLine.getOptionValue(ARG_SUPERVISORS) != null) {
                 for (String producer : commandLine.getOptionValue(ARG_SUPERVISORS).split(",")) {
-                    browser.$("#userConfigFilterProducerCodeId").should(Condition.visible, Duration.ofSeconds(100)).$x(".//div[contains(text(),'" + producer + "')]").parent().click();
+//                    browser.$("#userConfigFilterProducerCodeId").should(Condition.visible, Duration.ofSeconds(100)).$x(".//div[contains(text(),'" + producer + "')]").parent().click();
+                    driver.findElement(By.cssSelector("#userConfigFilterProducerCodeId")).findElement(By.xpath(".//div[contains(text(),'" + producer + "')]/..")).click();
                 }
             }
 
@@ -79,23 +80,27 @@ public class TestThread extends Thread {
                 startFilteringSignal.await();
                 //press Apply Filters button
                 System.out.println(" ---- Thread " + threadIndex + " - triggering filtering.");
-                browser.$("#applyFilterBtnId").should(Condition.exist, Duration.ofSeconds(100));
+//                browser.$("#applyFilterBtnId").should(Condition.exist, Duration.ofSeconds(100));
+                driver.findElement(By.cssSelector("#applyFilterBtnId")).isDisplayed();
                 before = System.currentTimeMillis();
-                browser.$("#applyFilterBtnId").click();
+//                browser.$("#applyFilterBtnId").click();
+                driver.findElement(By.cssSelector("#applyFilterBtnId")).click();
 
-                WebDriverWait wait = new WebDriverWait(browser.getWebDriver(), Duration.ofSeconds(100));
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(100));
+
                 //wait for page load finished
                 WebDriver frame = wait.until( ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.xpath(".//div[contains(@class,'EmbeddedPowerBI_powerBiEmbededContainer__')]/iframe")));
-                noOfResults = browser.$x(".//div[contains(@aria-rowindex,'501')]").should(Condition.exist, Duration.ofSeconds(100)).$x(".//div[contains(@column-index,'8')]").should(Condition.exist, Duration.ofSeconds(10)).getText();
+//                noOfResults = browser.$x(".//div[contains(@aria-rowindex,'501')]").should(Condition.exist, Duration.ofSeconds(100)).$x(".//div[contains(@column-index,'8')]").should(Condition.exist, Duration.ofSeconds(10)).getText();
+                noOfResults = driver.findElement(By.xpath(".//div[contains(@aria-rowindex,'501')]")).findElement(By.xpath(".//div[contains(@column-index,'8')]")).getText();
                 listLoadTime = System.currentTimeMillis() - before;
 
-                browser.getWebDriver().switchTo().parentFrame();
+                driver.switchTo().parentFrame();
 
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
             System.out.println(" ---- Thread " + threadIndex + " closing browser instance.");
-            browser.close();
+            driver.quit();
 
             reportData.addRow(new ReportRow("Thread" + threadIndex, loginPageLoadDuration, listLoadTime, noOfResults));
             System.out.println(" ---- Thread " + threadIndex + " - reached end of lifecycle. Added data to report.");

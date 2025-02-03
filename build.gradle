@@ -31,7 +31,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
     implementation 'org.slf4j:slf4j-nop:2.0.7'
 
-    implementation 'com.codeborne:selenide:7.5.1'
+    implementation 'com.codeborne:selenide:7.7.1'
     implementation 'org.apache.poi:poi:3.11'
     implementation 'org.jprocesses:jProcesses:1.6.4'
     implementation 'commons-cli:commons-cli:1.4'

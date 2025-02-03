@@ -1,14 +1,12 @@
 package com.gw;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.SelenideDriver;
-
-import java.time.Duration;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 
 public class CookieHandler {
 
-    public void acceptCookies(SelenideDriver driver) {
-        driver.$("#ch2-dialog").should(Condition.visible, Duration.ofSeconds(60))
-                .$x(".//button[1]").should(Condition.visible, Duration.ofSeconds(60)).click();
+    public void acceptCookies(WebDriver driver) {
+        driver.findElement(By.cssSelector("#ch2-dialog"))
+                .findElement(By.xpath(".//button[1]")).click();
     }
 }
