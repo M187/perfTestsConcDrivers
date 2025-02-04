@@ -41,11 +41,12 @@ public class Main {
 
             CountDownLatch latch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
             CountDownLatch filteringLatch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
+            CountDownLatch collectDataLatch = new CountDownLatch(Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)));
 
             System.out.println(" --- Starting to spawn browser threads.");
             for (int i = 1; i <= Integer.valueOf(commandLine.getOptionValue(ARG_THREADS)); i++) {
                 CountDownLatch nextBrowserLatch = new CountDownLatch(1);
-                new TestThread(commandLine, reportModel, latch, nextBrowserLatch, filteringLatch, i)
+                new TestThread(commandLine, reportModel, latch, nextBrowserLatch, filteringLatch, collectDataLatch, i)
                         .start();
                 System.out.println(" --- Thread " + i + " started.");
                 nextBrowserLatch.await(300, TimeUnit.SECONDS);

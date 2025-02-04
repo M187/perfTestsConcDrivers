@@ -4,12 +4,14 @@ import com.gw.report.ReportModel;
 import com.gw.report.ReportRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -38,12 +40,15 @@ public class ExcelWriter {
                 while (it.hasNext()) {
                     ReportRow rR = it.next();
                     Row row = sheet.createRow(rowIndex++);
-                    row.createCell(0).setCellValue("SSP portal loading time");
-                    row.createCell(1).setCellValue(rR.getLandingPageLoadTime());
+//                    row.createCell(0).setCellValue("SSP portal loading time");
+//                    row.createCell(1).setCellValue(rR.getLandingPageLoadTime());
                     row.createCell(2).setCellValue("List load time");
-                    row.createCell(3).setCellValue(rR.getListLoadTime());
-                    row.createCell(4).setCellValue("Number of entries returned");
-                    row.createCell(5).setCellValue(rR.getNumberOfResultsReturned());
+                    Cell cell = row.createCell(3);
+                    cell.setCellValue(
+                            new BigDecimal(rR.getListLoadTime().replaceAll("[^\\d.,]+","")).doubleValue());
+                    cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+//                    row.createCell(4).setCellValue("Number of entries returned");
+//                    row.createCell(5).setCellValue(rR.getNumberOfResultsReturned());
                     row.createCell(6).setCellValue(rR.getThreadName());
                 }
 

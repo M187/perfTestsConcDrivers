@@ -27,8 +27,8 @@ public class ReportModel {
 
     public static ReportModel getMockObject(){
         ReportModel model = new ReportModel("mock", false);
-        model.getRows().add(new ReportRow("",1l,2l,"3"));
-        model.getRows().add(new ReportRow("",1l,2l,"3"));
+        model.getRows().add(new ReportRow("",1l,"2","3"));
+        model.getRows().add(new ReportRow("",1l,"2","3"));
         return model;
     }
 }

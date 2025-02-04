@@ -1,6 +1,5 @@
 package com.gw;
 
-import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.SelenideConfig;
 import com.codeborne.selenide.SelenideDriver;
 import com.gw.report.ReportModel;
@@ -8,13 +7,8 @@ import com.gw.report.ReportRow;
 import lombok.AllArgsConstructor;
 import org.apache.commons.cli.CommandLine;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +23,7 @@ public class TestThread extends Thread {
     private final CountDownLatch doneSignal;
     private final CountDownLatch nextBrowserLatch;
     private final CountDownLatch startFilteringSignal;
+    private final CountDownLatch collectDataSignal;
     private final int threadIndex;
 
     @Override
@@ -48,7 +43,6 @@ public class TestThread extends Thread {
             driver.manage().timeouts().implicitlyWait(100, TimeUnit.SECONDS);
             System.out.println(" ---- Thread " + threadIndex + " - SSP login page reached.");
 
-//            browser.$("#email").should(Condition.visible, Duration.ofSeconds(60));
             driver.findElement(By.cssSelector("#email")).isDisplayed();
             long loginPageLoadDuration = System.currentTimeMillis() - before;
             driver.findElement(By.cssSelector("#email")).sendKeys(commandLine.getOptionValue(ARG_LOGIN));
@@ -63,38 +57,28 @@ public class TestThread extends Thread {
 
             //set parameters for filtering
             if (commandLine.getOptionValue(ARG_USER) != null) {
-//                browser.$("#userConfigFilterEmailId").should(Condition.visible, Duration.ofSeconds(100)).$x(".//div[contains(text(),'" + commandLine.getOptionValue(ARG_USER) + "')]").parent().click();
                 driver.findElement(By.cssSelector("#userConfigFilterEmailId")).findElement(By.xpath(".//div[contains(text(),'" + commandLine.getOptionValue(ARG_USER) + "')]/..")).click();
             } else if (commandLine.getOptionValue(ARG_SUPERVISORS) != null) {
                 for (String producer : commandLine.getOptionValue(ARG_SUPERVISORS).split(",")) {
-//                    browser.$("#userConfigFilterProducerCodeId").should(Condition.visible, Duration.ofSeconds(100)).$x(".//div[contains(text(),'" + producer + "')]").parent().click();
                     driver.findElement(By.cssSelector("#userConfigFilterProducerCodeId")).findElement(By.xpath(".//div[contains(text(),'" + producer + "')]/..")).click();
                 }
             }
 
             nextBrowserLatch.countDown();
             startFilteringSignal.countDown();
-            String noOfResults;
-            long listLoadTime;
+            String loadTime;
             try {
                 startFilteringSignal.await();
                 //press Apply Filters button
                 System.out.println(" ---- Thread " + threadIndex + " - triggering filtering.");
-//                browser.$("#applyFilterBtnId").should(Condition.exist, Duration.ofSeconds(100));
-                driver.findElement(By.cssSelector("#applyFilterBtnId")).isDisplayed();
-                before = System.currentTimeMillis();
-//                browser.$("#applyFilterBtnId").click();
+                waitForReadyState(driver);
                 driver.findElement(By.cssSelector("#applyFilterBtnId")).click();
 
-                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(100));
+                collectDataSignal.countDown();
+                collectDataSignal.await();
 
-                //wait for page load finished
-                WebDriver frame = wait.until( ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.xpath(".//div[contains(@class,'EmbeddedPowerBI_powerBiEmbededContainer__')]/iframe")));
-//                noOfResults = browser.$x(".//div[contains(@aria-rowindex,'501')]").should(Condition.exist, Duration.ofSeconds(100)).$x(".//div[contains(@column-index,'8')]").should(Condition.exist, Duration.ofSeconds(10)).getText();
-                noOfResults = driver.findElement(By.xpath(".//div[contains(@aria-rowindex,'501')]")).findElement(By.xpath(".//div[contains(@column-index,'8')]")).getText();
-                listLoadTime = System.currentTimeMillis() - before;
-
-                driver.switchTo().parentFrame();
+                waitForReadyState(driver);
+                loadTime = driver.findElement(By.cssSelector("#PowerBiEmbededStatusId")).getText().split(":")[1];
 
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -102,7 +86,7 @@ public class TestThread extends Thread {
             System.out.println(" ---- Thread " + threadIndex + " closing browser instance.");
             driver.quit();
 
-            reportData.addRow(new ReportRow("Thread" + threadIndex, loginPageLoadDuration, listLoadTime, noOfResults));
+            reportData.addRow(new ReportRow("Thread" + threadIndex, loginPageLoadDuration, loadTime, ""));
             System.out.println(" ---- Thread " + threadIndex + " - reached end of lifecycle. Added data to report.");
         } catch (Exception e) {
             System.out.println(" ---- Thread " + threadIndex + " had exception");
@@ -113,8 +97,12 @@ public class TestThread extends Thread {
         }
     }
 
-    private void waitUntilPageLoaded(SelenideDriver driver) {
-        new WebDriverWait(driver.getWebDriver(), Duration.ofSeconds(120)).until(
-                webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
+    public void waitForReadyState(WebDriver driver){
+        long startTime = System.currentTimeMillis();
+        while (
+            driver.findElement(By.cssSelector("#PowerBiEmbededStatusId")).getText().contains("Not ready")
+            && System.currentTimeMillis() - startTime < 100000)
+        {
+        }
     }
 }
