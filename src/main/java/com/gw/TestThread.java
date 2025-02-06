@@ -8,7 +8,10 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.cli.CommandLine;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -35,11 +38,11 @@ public class TestThread extends Thread {
             config.browserSize("1920x1080");
             config.headless(commandLine.hasOption(ARG_HEADLESS));
 
-
             SelenideDriver browser = new SelenideDriver(config);
             long before = System.currentTimeMillis();
             browser.open("https://partner2-qa.colonnade.pl/myColonnade/dashboard");
             WebDriver driver = browser.getWebDriver();
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
             driver.manage().timeouts().implicitlyWait(100, TimeUnit.SECONDS);
             System.out.println(" ---- Thread " + threadIndex + " - SSP login page reached.");
 
@@ -49,12 +52,14 @@ public class TestThread extends Thread {
             driver.findElement(By.cssSelector("#password")).sendKeys(commandLine.getOptionValue(ARG_PASSWORD));
             driver.findElement(By.cssSelector("#next")).click();
 
-            new CookieHandler().acceptCookies(driver);
+            new CookieHandler().acceptCookies(browser);
             System.out.println(" ---- Thread " + threadIndex + " - Succ logged into SSP instance and accepted cookies");
 
             //move to reports tab
+            wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#dashboard_reporting_id")));
             driver.findElement(By.cssSelector("#dashboard_reporting_id")).click();
 
+            wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#applyFilterBtnId")));
             //set parameters for filtering
             if (commandLine.getOptionValue(ARG_USER) != null) {
                 driver.findElement(By.cssSelector("#userConfigFilterEmailId")).findElement(By.xpath(".//div[contains(text(),'" + commandLine.getOptionValue(ARG_USER) + "')]/..")).click();
