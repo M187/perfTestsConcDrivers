@@ -10,6 +10,7 @@ public class ArgumentParser {
     public static final String ARG_THREADS = "threads";
     public static final String ARG_USER = "user";
     public static final String ARG_SUPERVISORS = "supervisors";
+    public static final String NAME_SUFFIX = "name_suffix";
 
 
     // example string: -l login -p password -h headless -t threads
@@ -22,6 +23,7 @@ public class ArgumentParser {
         options.addOption("t", ARG_THREADS, true, "Number of threads");
         options.addOption("u", ARG_USER, true, "User to be used");
         options.addOption("s", ARG_SUPERVISORS, true, "Supervisors to be used, comma separated");
+        options.addOption("n", NAME_SUFFIX, true, "Generated report name suffix");
 
         CommandLineParser parser = new DefaultParser();
         try {

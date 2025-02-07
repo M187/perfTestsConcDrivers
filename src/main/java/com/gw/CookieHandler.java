@@ -17,6 +17,7 @@ public class CookieHandler {
     public void acceptCookies(WebDriver driver) {
         WebElement element = driver.findElement(By.cssSelector("#ch2-dialog"))
                 .findElement(By.xpath(".//button[1]"));
+        sleep(500);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         wait.until(ExpectedConditions.elementToBeClickable(element));
         element.click();

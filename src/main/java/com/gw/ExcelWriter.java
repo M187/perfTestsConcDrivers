@@ -2,6 +2,7 @@ package com.gw;
 
 import com.gw.report.ReportModel;
 import com.gw.report.ReportRow;
+import org.apache.commons.cli.CommandLine;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -16,12 +17,21 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 
+import static com.gw.ArgumentParser.ARG_THREADS;
+import static com.gw.ArgumentParser.NAME_SUFFIX;
+
 public class ExcelWriter {
 
-    public String prepareReport(ReportModel reportModel, String threadCount, long runtime) {
+    public String prepareReport(ReportModel reportModel, CommandLine commandLine, long runtime) {
 
         try {
-            String filename = "runReport_" + new SimpleDateFormat("dd.MM.yyyy_HHmm").format(new Date()) + "_" + threadCount + "browserInstances.xls";
+//            String filename = "runReport_" + new SimpleDateFormat("dd.MM.yyyy_HHmm").format(new Date()) + "_" + commandLine.getOptionValue(ARG_THREADS) + "browserInstances.xls";
+
+            String filename = commandLine.getOptionValue(NAME_SUFFIX) != null ?
+                    "runReport_" + new SimpleDateFormat("dd.MM.yyyy_HHmm").format(new Date()) + "_" + commandLine.getOptionValue(ARG_THREADS) + "threads_" + commandLine.getOptionValue(NAME_SUFFIX) + ".xls"
+            : "runReport_" + new SimpleDateFormat("dd.MM.yyyy_HHmm").format(new Date()) + "_" + commandLine.getOptionValue(ARG_THREADS) + "threads.xls";
+
+
             File myObj = new File(filename);
             FileOutputStream fileOutputStream = null;
             try {

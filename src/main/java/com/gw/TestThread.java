@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static com.codeborne.selenide.Selenide.sleep;
 import static com.gw.ArgumentParser.*;
 import static org.openqa.selenium.firefox.GeckoDriverService.GECKO_DRIVER_LOG_PROPERTY;
 
@@ -48,11 +49,12 @@ public class TestThread extends Thread {
 
             driver.findElement(By.cssSelector("#email")).isDisplayed();
             long loginPageLoadDuration = System.currentTimeMillis() - before;
+            sleep(500);
             driver.findElement(By.cssSelector("#email")).sendKeys(commandLine.getOptionValue(ARG_LOGIN));
             driver.findElement(By.cssSelector("#password")).sendKeys(commandLine.getOptionValue(ARG_PASSWORD));
             driver.findElement(By.cssSelector("#next")).click();
 
-            new CookieHandler().acceptCookies(browser);
+            new CookieHandler().acceptCookies(driver);
             System.out.println(" ---- Thread " + threadIndex + " - Succ logged into SSP instance and accepted cookies");
 
             //move to reports tab
@@ -95,7 +97,7 @@ public class TestThread extends Thread {
             System.out.println(" ---- Thread " + threadIndex + " - reached end of lifecycle. Added data to report.");
         } catch (Exception e) {
             System.out.println(" ---- Thread " + threadIndex + " had exception");
-            throw e;
+            throw new RuntimeException(e);
         } finally {
             startFilteringSignal.countDown();
             doneSignal.countDown();

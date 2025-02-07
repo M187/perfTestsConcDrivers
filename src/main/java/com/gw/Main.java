@@ -56,7 +56,7 @@ public class Main {
 
             System.out.println(" --- Writing results into excel.");
 //            String fileName = new ExcelWriter().prepareReport(ReportModel.getMockObject(), commandLine.getOptionValue(ARG_THREADS), System.currentTimeMillis() - runTime);
-            String fileName = new ExcelWriter().prepareReport(reportModel, commandLine.getOptionValue(ARG_THREADS), System.currentTimeMillis() - runTime);
+            String fileName = new ExcelWriter().prepareReport(reportModel, commandLine, System.currentTimeMillis() - runTime);
             System.out.println(" --- Finished writing results into excel file: " + fileName);
         }
     }
