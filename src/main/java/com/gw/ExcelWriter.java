@@ -57,7 +57,11 @@ public class ExcelWriter {
                     cell.setCellValue(
                             new BigDecimal(rR.getListLoadTime().replaceAll("[^\\d.,]+","")).doubleValue());
                     cell.setCellType(Cell.CELL_TYPE_NUMERIC);
-//                    row.createCell(4).setCellValue("Number of entries returned");
+
+                    cell = row.createCell(4);
+                    cell.setCellValue(
+                            new BigDecimal(rR.getListRenderTime().replaceAll("[^\\d.,]+","")).doubleValue());
+                    cell.setCellType(Cell.CELL_TYPE_NUMERIC);
 //                    row.createCell(5).setCellValue(rR.getNumberOfResultsReturned());
                     row.createCell(6).setCellValue(rR.getThreadName());
                 }
@@ -94,17 +98,24 @@ public class ExcelWriter {
     }
 
     private void populateStatistics(HSSFSheet sheet, int lastRowOfMetrics) {
+        Row rowDesc = sheet.createRow(lastRowOfMetrics + 1);
+        rowDesc.createCell(3).setCellValue("Load time");
+        rowDesc.createCell(4).setCellValue("Render time");
         Row rowAverage = sheet.createRow(lastRowOfMetrics + 2);
-        rowAverage.createCell(2).setCellValue("Average List load time");
+        rowAverage.createCell(2).setCellValue("Average ");
         Row rowMax = sheet.createRow(lastRowOfMetrics + 3);
-        rowMax.createCell(2).setCellValue("Maximum List load time");
+        rowMax.createCell(2).setCellValue("Maximum");
         Row rowMin = sheet.createRow(lastRowOfMetrics + 4);
-        rowMin.createCell(2).setCellValue("Minimum List load time");
+        rowMin.createCell(2).setCellValue("Minimum ");
 
         sheet.autoSizeColumn(2);
 
         rowAverage.createCell(3).setCellFormula("AVERAGE(D2:D" + lastRowOfMetrics + ")");
         rowMax.createCell(3).setCellFormula("MAX(D2:D" + lastRowOfMetrics + ")");
         rowMin.createCell(3).setCellFormula("MIN(D2:D" + lastRowOfMetrics + ")");
+
+        rowAverage.createCell(4).setCellFormula("AVERAGE(E2:E" + lastRowOfMetrics + ")");
+        rowMax.createCell(4).setCellFormula("MAX(E2:E" + lastRowOfMetrics + ")");
+        rowMin.createCell(4).setCellFormula("MIN(E2:E" + lastRowOfMetrics + ")");
     }
 }

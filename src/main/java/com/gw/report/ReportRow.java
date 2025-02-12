@@ -12,5 +12,6 @@ public class ReportRow {
     String threadName;
     long landingPageLoadTime;
     String listLoadTime;
+    String listRenderTime;
     String numberOfResultsReturned;
 }

@@ -49,10 +49,15 @@ public class TestThread extends Thread {
 
             driver.findElement(By.cssSelector("#email")).isDisplayed();
             long loginPageLoadDuration = System.currentTimeMillis() - before;
-            sleep(500);
+            sleep(300);
             driver.findElement(By.cssSelector("#email")).sendKeys(commandLine.getOptionValue(ARG_LOGIN));
             driver.findElement(By.cssSelector("#password")).sendKeys(commandLine.getOptionValue(ARG_PASSWORD));
-            driver.findElement(By.cssSelector("#next")).click();
+            try {
+                driver.findElement(By.cssSelector("#next")).click();
+            } catch (Exception e) {
+                sleep(1000);
+                driver.findElement(By.cssSelector("#next")).click();
+            }
 
             new CookieHandler().acceptCookies(driver);
             System.out.println(" ---- Thread " + threadIndex + " - Succ logged into SSP instance and accepted cookies");
@@ -74,18 +79,21 @@ public class TestThread extends Thread {
             nextBrowserLatch.countDown();
             startFilteringSignal.countDown();
             String loadTime;
+            String renderTime;
             try {
                 startFilteringSignal.await();
                 //press Apply Filters button
                 System.out.println(" ---- Thread " + threadIndex + " - triggering filtering.");
                 waitForReadyState(driver);
+                browser.$("#applyFilterBtnId").scrollIntoCenter();
                 driver.findElement(By.cssSelector("#applyFilterBtnId")).click();
 
                 collectDataSignal.countDown();
                 collectDataSignal.await();
 
                 waitForReadyState(driver);
-                loadTime = driver.findElement(By.cssSelector("#PowerBiEmbededStatusId")).getText().split(":")[1];
+                loadTime = driver.findElement(By.cssSelector("#loading-time")).getText();
+                renderTime = driver.findElement(By.cssSelector("#rendered-time")).getText();
 
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -93,12 +101,13 @@ public class TestThread extends Thread {
             System.out.println(" ---- Thread " + threadIndex + " closing browser instance.");
             driver.quit();
 
-            reportData.addRow(new ReportRow("Thread" + threadIndex, loginPageLoadDuration, loadTime, ""));
+            reportData.addRow(new ReportRow("Thread" + threadIndex, loginPageLoadDuration, loadTime, renderTime, ""));
             System.out.println(" ---- Thread " + threadIndex + " - reached end of lifecycle. Added data to report.");
         } catch (Exception e) {
             System.out.println(" ---- Thread " + threadIndex + " had exception");
             throw new RuntimeException(e);
         } finally {
+            collectDataSignal.countDown();
             startFilteringSignal.countDown();
             doneSignal.countDown();
         }
